@@ -8,13 +8,13 @@ ASCII_ENTRIES: Final[list[str]]
 class C2k:
     """英単語 -> カタカナの推論を行う。"""
 
-    def __init__(self, *, max_len: int = 32) -> None:
+    def __init__(self, *, max_length: int = 32) -> None:
         """
         新しいインスタンスを生成する。
 
         Parameters
         ----------
-        max_len : int, default 32
+        max_length : int, default 32
             最大の出力長。
         """
 

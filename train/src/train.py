@@ -157,8 +157,8 @@ class MyDataset(Dataset):
             return en, kata
 
 
-def lens2mask(lens, max_len):
-    mask = torch.zeros(len(lens), max_len).bool()
+def lens2mask(lens, max_length):
+    mask = torch.zeros(len(lens), max_length).bool()
     for i, le in enumerate(lens):
         mask[i, :le] = True
     return mask

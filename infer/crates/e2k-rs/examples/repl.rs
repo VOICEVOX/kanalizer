@@ -4,7 +4,7 @@ use clap::{Parser, ValueEnum};
 struct Args {
     /// 読みの最大長。
     #[clap(short, long, default_value = "32")]
-    max_len: usize,
+    max_length: usize,
 
     /// アルゴリズム。
     #[clap(short, long, default_value = "greedy")]
@@ -33,7 +33,7 @@ enum StrategyArg {
 fn main() {
     let args = Args::parse();
 
-    let mut c2k = e2k::C2k::new(32);
+    let mut c2k = e2k::C2k::new(args.max_length);
     match args.strategy {
         StrategyArg::Greedy => {
             c2k.set_decode_strategy(e2k::Strategy::Greedy);

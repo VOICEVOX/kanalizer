@@ -76,7 +76,7 @@ struct S2s {
     post_decoder: layers::Gru,
     attn: layers::Mha,
     fc: layers::Linear,
-    max_len: usize,
+    max_length: usize,
 
     strategy: Strategy,
 }
@@ -100,7 +100,7 @@ where
 }
 
 impl S2s {
-    fn new(weights: safetensors::SafeTensors, max_len: usize) -> Self {
+    fn new(weights: safetensors::SafeTensors, max_length: usize) -> Self {
         let e_emb = layers::Embedding::new(get_array_f16(&weights, "e_emb.weight"));
         let k_emb = layers::Embedding::new(get_array_f16(&weights, "k_emb.weight"));
         let encoder = layers::Gru::new(
@@ -165,7 +165,7 @@ impl S2s {
             post_decoder,
             attn,
             fc,
-            max_len,
+            max_length,
             strategy,
         }
     }
@@ -231,7 +231,7 @@ impl S2s {
         let mut result = vec![constants::SOS_IDX];
         let mut h1: Option<ndarray::Array1<f32>> = None;
         let mut h2: Option<ndarray::Array1<f32>> = None;
-        for _ in 0..self.max_len {
+        for _ in 0..self.max_length {
             let dec_emb = self
                 .k_emb
                 .forward(&ndarray::Array1::from_elem(1, *result.last().unwrap()));
@@ -289,7 +289,7 @@ impl<I: Hash + Eq, O: Clone> BaseE2k<I, O> {
         max_len: usize,
     ) -> Self {
         Self {
-            s2s: S2s::new(tensors, max_len),
+            s2s: S2s::new(tensors, max_length),
             in_table,
             out_table,
         }
@@ -337,8 +337,8 @@ impl C2k {
     ///
     /// # Arguments
     ///
-    /// - `max_len`: 読みの最大長。
-    pub fn new(max_len: usize) -> Self {
+    /// - `max_length`: 読みの最大長。
+    pub fn new(max_length: usize) -> Self {
         static MODEL: std::sync::LazyLock<Vec<u8>> = std::sync::LazyLock::new(|| {
             cfg_elif::expr::cfg!(if (docsrs) {
                 Vec::new()
@@ -378,7 +378,7 @@ impl C2k {
                     )
                 })
                 .collect(),
-            max_len,
+            max_length,
         );
         Self { inner }
     }

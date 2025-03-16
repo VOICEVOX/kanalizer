@@ -60,10 +60,10 @@ struct C2k {
 #[pymethods]
 impl C2k {
     #[new]
-    #[pyo3(signature = (max_len = 32))]
-    fn new(max_len: usize) -> Self {
+    #[pyo3(signature = (max_length = 32))]
+    fn new(max_length: usize) -> Self {
         Self {
-            inner: std::sync::RwLock::new(e2k::C2k::new(max_len)),
+            inner: std::sync::RwLock::new(e2k::C2k::new(max_length)),
         }
     }
 
