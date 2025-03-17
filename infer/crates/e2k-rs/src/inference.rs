@@ -281,12 +281,12 @@ impl<I: Hash + Eq, O: Clone> BaseE2k<I, O> {
     /// - `tensors`: モデルの重み。必要な値についてはS2sの実装を参照してください。
     /// - `in_table`: 入力のテーブル。キーが入力、値がモデルの入力に変換されるインデックス。
     /// - `out_table`: 出力のテーブル。キーがモデルの出力に変換されるインデックス、値が出力。
-    /// - `max_len`: 読みの最大長。
+    /// - `max_length`: 読みの最大長。
     pub fn new(
         tensors: safetensors::SafeTensors,
         in_table: HashMap<I, usize>,
         out_table: HashMap<usize, O>,
-        max_len: usize,
+        max_length: usize,
     ) -> Self {
         Self {
             s2s: S2s::new(tensors, max_length),
