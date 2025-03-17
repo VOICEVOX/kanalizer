@@ -7,7 +7,7 @@
 //! ```rust
 //! // 文字列をカタカナに変換する例
 //! let src = "constants";
-//! let c2k = e2k::C2k::new(&e2k::models::MODEL, 32);
+//! let c2k = e2k::C2k::new(32);
 //! let dst = c2k.infer(src);
 //!
 //! dbg!(dst); // "コンスタンツ"

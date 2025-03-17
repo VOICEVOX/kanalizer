@@ -1,0 +1,36 @@
+name: Test Dataset
+on:
+  push:
+  pull_request:
+    paths:
+      - .github/workflows/test_dataset.yml
+      - dataset/**
+
+defaults:
+  run:
+    working-directory: dataset
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          package_json_file: dataset/package.json
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: dataset/.node-version
+          cache: 'pnpm'
+          cache-dependency-path: dataset/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run lint
+        run: pnpm run lint

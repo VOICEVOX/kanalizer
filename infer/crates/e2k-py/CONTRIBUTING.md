@@ -26,3 +26,15 @@ uv run maturin build --release
 ```bash
 uv run pytest
 ```
+
+## 静的解析
+
+```bash
+uv run ruff check 
+```
+
+## フォーマット
+
+```bash
+uv run ruff format
+```

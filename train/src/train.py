@@ -8,7 +8,6 @@ import os
 import random
 import shutil
 import subprocess
-import sys
 
 from g2p_en import G2p
 import torch

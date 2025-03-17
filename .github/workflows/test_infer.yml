@@ -1,0 +1,46 @@
+name: Test Infer
+on:
+  push:
+  pull_request:
+    paths:
+      - .github/workflows/test_infer.yml
+      - infer/**
+
+defaults:
+  run:
+    working-directory: infer
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "infer"
+
+      - name: Run Rust lint
+        run: |
+          cargo clippy --all-targets --all-features -- -D warnings
+          cargo fmt --all -- --check
+
+      - name: Run Rust tests
+        run: cargo test
+
+      - name: Run Python lint
+        working-directory: infer/crates/e2k-py
+        run: |
+          uv run ruff check
+          uv run ruff format --diff
+
+      - name: Run Python tests
+        working-directory: infer/crates/e2k-py
+        run: |
+          uv run maturin develop
+          uv run pytest
