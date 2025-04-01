@@ -76,7 +76,7 @@ jobs:
       id-token: write
       contents: write
 
-    environment: release-pypi
+    environment: pypi
 
     steps:
       - name: Download artifacts
