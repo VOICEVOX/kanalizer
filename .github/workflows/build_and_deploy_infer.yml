@@ -7,7 +7,7 @@ on:
         description: "バージョン情報（A.BB.C / A.BB.C-preview.D）"
         required: true
       production:
-        description: "TestPyPIではなくPyPIにリリースする"
+        description: "falseならTestPyPIにデプロイ、trueならpypi環境でPyPIにデプロイ"
         type: boolean
         required: false
         default: false
@@ -76,7 +76,7 @@ jobs:
       id-token: write
       contents: write
 
-    environment: pypi
+    environment: ${{ inputs.production && 'pypi' || '' }}
 
     steps:
       - name: Download artifacts
