@@ -7,7 +7,7 @@ on:
         description: "バージョン情報（A.BB.C / A.BB.C-preview.D）"
         required: true
       production:
-        description: "falseならTestPyPIにデプロイ、trueならpypi環境でPyPIにデプロイ"
+        description: "falseならTestPyPIにデプロイ、trueならpypi EnvironmentでPyPIにデプロイ"
         type: boolean
         required: false
         default: false
