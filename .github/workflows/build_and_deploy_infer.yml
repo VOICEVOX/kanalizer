@@ -22,6 +22,7 @@ jobs:
   validate:
     runs-on: ubuntu-latest
 
+    # NOTE:
     # Checkoutしていないため、そのままだとworking-directoryが存在しないディレクトリを指して落ちる。
     # そのため、job単位でリセットする。
     defaults:
