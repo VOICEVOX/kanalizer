@@ -21,6 +21,9 @@ jobs:
   # TODO: 入力のパースとそれに従った値の分岐をconfigというjobにまとめる
   validate:
     runs-on: ubuntu-latest
+
+    # Checkoutしていないため、そのままだとworking-directoryが存在しないディレクトリを指して落ちる。
+    # そのため、job単位でリセットする。
     defaults:
       run:
         working-directory: .
