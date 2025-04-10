@@ -12,7 +12,6 @@ content = f"""
 // `generate_constants.py` により生成。
 // このファイルは直接編集しないでください。
 
-// pub const PAD_IDX: usize = {constants.PAD_IDX};
 pub const SOS_IDX: usize = {constants.SOS_IDX};
 pub const EOS_IDX: usize = {constants.EOS_IDX};
 pub const KANAS: &[&str] = &[

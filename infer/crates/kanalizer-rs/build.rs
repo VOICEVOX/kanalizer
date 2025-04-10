@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-static MODEL_TAG: &str = "v1";
+static MODEL_TAG: &str = "v2";
 
 fn main() -> anyhow::Result<()> {
     println!("cargo:rerun-if-changed=build.rs");
