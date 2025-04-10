@@ -44,4 +44,5 @@ rstest = "0.25.0"
 [build-dependencies]
 anyhow = "1.0.95"
 brotli = "7.0.0"
+tempfile = "3.19.1"
 ureq = "3.0.5"
