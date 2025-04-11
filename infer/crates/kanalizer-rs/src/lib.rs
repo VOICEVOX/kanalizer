@@ -69,6 +69,12 @@ impl ConvertBuilder {
         self
     }
 
+    /// 推論が終了しなかった場合にエラーを返すかどうかを指定する。
+    pub fn with_error_on_incomplete(mut self, error_on_incomplete: bool) -> Self {
+        self.options.error_on_incomplete = error_on_incomplete;
+        self
+    }
+
     /// 推論を行う。
     pub fn perform(self) -> Result<String> {
         KANALIZER.convert(&self.word, &self.options)

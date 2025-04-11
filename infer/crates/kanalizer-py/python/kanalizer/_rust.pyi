@@ -17,6 +17,8 @@ def convert(
     /,
     *,
     max_length: int = 32,
+    strict: bool = True,
+    error_on_incomplete: bool = True,
     strategy: Literal["greedy"] = "greedy",
 ) -> str: ...
 @overload
@@ -25,6 +27,8 @@ def convert(
     /,
     *,
     max_length: int = 32,
+    strict: bool = True,
+    error_on_incomplete: bool = True,
     strategy: Literal["top_k"],
     k: int = 10,
 ) -> str: ...
@@ -34,12 +38,21 @@ def convert(
     /,
     *,
     max_length: int = 32,
+    strict: bool = True,
+    error_on_incomplete: bool = True,
     strategy: Literal["top_p"],
     p: float = 0.9,
     t: float = 1.0,
 ) -> str: ...
 def convert(
-    word: str, /, *, max_length: int = 32, strategy: Strategy = "greedy", **kwargs
+    word: str,
+    /,
+    *,
+    max_length: int = 32,
+    strategy: Strategy = "greedy",
+    strict: bool = True,
+    error_on_incomplete: bool = True,
+    **kwargs,
 ) -> str:
     """
     推論を行う。
@@ -53,6 +66,8 @@ def convert(
     strict : bool, default True
         入力の検証を行うかどうか。
         Falseの場合、無効な文字は無視されます。
+    error_on_incomplete : bool, default True
+        推論が終了しなかった場合にエラーを返すかどうか。
     strategy : Strategy, default "greedy"
         デコードのアルゴリズム。
     k : int, default 10
@@ -68,5 +83,7 @@ def convert(
         - strictがTrue、かつ`word`が空文字列の場合。
         - strictがTrue、かつ`word`にKanalizerの入力に使えない文字が含まれている場合。
         - `max_length`が0以下の場合。
+    IncompleteConversionError
+        - `error_on_incomplete`がTrue、かつ推論が終了しなかった場合。
     """
     ...

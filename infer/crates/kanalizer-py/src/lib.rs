@@ -87,11 +87,15 @@ fn extract_strategy(
     }
 }
 
+pyo3::import_exception!(kanalizer._error, IncompleteConversionError);
+
 #[pyfunction]
-#[pyo3(signature = (word, /, *, max_length = 32, strategy = "greedy", **kwargs))]
+#[pyo3(signature = (word, /, *, max_length = 32, strict = true, error_on_incomplete = true, strategy = "greedy", **kwargs))]
 fn convert(
     word: &str,
     max_length: usize,
+    strict: bool,
+    error_on_incomplete: bool,
     strategy: &str,
     kwargs: Option<&Bound<'_, PyDict>>,
 ) -> PyResult<String> {
@@ -101,6 +105,8 @@ fn convert(
             pyo3::exceptions::PyValueError::new_err("max_length must be a positive integer")
         })?)
         .with_strategy(&strategy)
+        .with_strict(strict)
+        .with_error_on_incomplete(error_on_incomplete)
         .perform();
 
     match result {
@@ -108,10 +114,18 @@ fn convert(
         Err(err @ (kanalizer::Error::EmptyInput | kanalizer::Error::InvalidChars { .. })) => {
             Err(pyo3::exceptions::PyValueError::new_err(err.to_string()))
         }
+        Err(
+            ref err @ kanalizer::Error::IncompleteConversion {
+                ref incomplete_output,
+            },
+        ) => Err(IncompleteConversionError::new_err((
+            err.to_string(),
+            incomplete_output.to_owned(),
+        ))),
     }
 }
 
-#[pymodule(name = "kanalizer")]
+#[pymodule(name = "_rust")]
 fn init_kanalizer(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add("INPUT_CHARS", &*kanalizer::INPUT_CHARS)?;

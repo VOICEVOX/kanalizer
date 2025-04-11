@@ -26,12 +26,34 @@ fn test_kanalizer_long() {
             src,
             &kanalizer::ConvertOptions {
                 max_length: 10.try_into().unwrap(),
+                error_on_incomplete: false,
                 ..Default::default()
             },
         )
         .unwrap();
     assert_ne!(unlimited_dst, limited_dst);
     assert_eq!(limited_dst.chars().count(), 10);
+}
+
+#[test]
+fn test_kanalizer_long_error() {
+    let src = "phosphoribosylaminoimidazolesuccinocarboxamide";
+
+    let kanalizer = kanalizer::Kanalizer::new();
+    let limited_dst = kanalizer
+        .convert(
+            src,
+            &kanalizer::ConvertOptions {
+                max_length: 10.try_into().unwrap(),
+                error_on_incomplete: true,
+                ..Default::default()
+            },
+        )
+        .unwrap_err();
+    assert!(matches!(
+        limited_dst,
+        kanalizer::Error::IncompleteConversion { .. }
+    ));
 }
 
 #[test]

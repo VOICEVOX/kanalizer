@@ -17,6 +17,8 @@ pub struct ConvertOptions {
     /// 入力を検証する。
     /// falseの場合、無効な文字は無視されます。
     pub strict: bool,
+    /// 推論が終了しなかった場合にエラーを返す。
+    pub error_on_incomplete: bool,
 }
 
 impl Default for ConvertOptions {
@@ -25,6 +27,7 @@ impl Default for ConvertOptions {
             max_length: 32.try_into().unwrap(),
             strategy: Strategy::default(),
             strict: true,
+            error_on_incomplete: true,
         }
     }
 }
@@ -242,7 +245,7 @@ impl S2s {
         &self,
         source: &ndarray::Array1<usize>,
         options: &ConvertOptions,
-    ) -> ndarray::Array1<usize> {
+    ) -> E2kOutput<usize> {
         let e_emb = self.e_emb.forward(source);
         let (enc_out, _) = self.encoder.forward(&e_emb.view(), None);
         let (enc_out_rev, _) = self.encoder_reverse.forward(&e_emb.view(), None);
@@ -286,7 +289,11 @@ impl S2s {
             }
         }
 
-        ndarray::Array1::from(result)
+        let finished = result.last().unwrap() == &constants::EOS_IDX;
+        E2kOutput {
+            output: result,
+            finished,
+        }
     }
 }
 
@@ -294,6 +301,11 @@ struct BaseE2k<I: Hash + Eq, O: Clone> {
     s2s: S2s,
     in_table: HashMap<I, usize>,
     out_table: HashMap<usize, O>,
+}
+
+struct E2kOutput<O> {
+    output: Vec<O>,
+    finished: bool,
 }
 
 impl<I: Hash + Eq, O: Clone> BaseE2k<I, O> {
@@ -308,26 +320,33 @@ impl<I: Hash + Eq, O: Clone> BaseE2k<I, O> {
             out_table,
         }
     }
-    fn infer(&self, input: &[I], options: &ConvertOptions) -> Vec<O> {
+    fn infer(&self, input: &[I], options: &ConvertOptions) -> E2kOutput<O> {
         let source = input
             .iter()
             .filter_map(|c| self.in_table.get(c).copied())
             .collect_vec();
         if source.is_empty() {
-            return Vec::new();
+            return E2kOutput {
+                output: vec![],
+                finished: true,
+            };
         }
         let source = [constants::SOS_IDX]
             .into_iter()
             .chain(source)
             .chain([constants::EOS_IDX]);
         let source = ndarray::Array1::from_iter(source);
-        let target = self.s2s.forward(&source, options);
-        target
-            .iter()
-            .skip(1)
-            .take_while(|&&x| x != constants::EOS_IDX)
-            .map(|&x| self.out_table[&x].clone())
-            .collect()
+        let result = self.s2s.forward(&source, options);
+        E2kOutput {
+            output: result
+                .output
+                .iter()
+                .skip(1)
+                .take_while(|&&x| x != constants::EOS_IDX)
+                .map(|&x| self.out_table[&x].clone())
+                .collect(),
+            finished: result.finished,
+        }
     }
 }
 
@@ -406,7 +425,19 @@ impl Kanalizer {
             self.validate_input(input)?;
         }
         let input = input.chars().map(|c| c.to_string()).collect::<Vec<_>>();
-        Ok(self.inner.infer(&input, options).into_iter().collect())
+        let infer_result = self.inner.infer(&input, options);
+        let output = infer_result
+            .output
+            .iter()
+            .map(|c| c.to_string())
+            .collect::<String>();
+        if !infer_result.finished && options.error_on_incomplete {
+            return Err(Error::IncompleteConversion {
+                incomplete_output: output,
+            });
+        }
+
+        Ok(output)
     }
 
     fn validate_input(&self, input: &str) -> Result<()> {

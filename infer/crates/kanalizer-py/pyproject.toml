@@ -18,3 +18,7 @@ dependencies = []
 
 [dependency-groups]
 dev = ["maturin>=1.8.2", "pyright>=1.1.398", "pytest>=8.3.5", "ruff>=0.11.0"]
+
+[tool.maturin]
+module-name = "kanalizer._rust"
+python-source = "python"
