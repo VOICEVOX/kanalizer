@@ -33,13 +33,18 @@ class Model(nn.Module):
         self.encoder = nn.GRU(
             config.dim, config.dim, batch_first=True, bidirectional=True
         )
+        self.use_layernorm = config.use_layernorm
+        if self.use_layernorm:
+            self.encoder_norm = nn.LayerNorm(2 * config.dim)
         self.encoder_fc = nn.Sequential(
             nn.Linear(2 * config.dim, config.dim),
             nn.Tanh(),
         )
         self.pre_decoder = nn.GRU(config.dim, config.dim, batch_first=True)
-        self.post_decoder = nn.GRU(2 * config.dim, config.dim, batch_first=True)
         self.attn = nn.MultiheadAttention(config.dim, 4, batch_first=True, dropout=0.1)
+        if self.use_layernorm:
+            self.attn_norm = nn.LayerNorm(config.dim)
+        self.post_decoder = nn.GRU(2 * config.dim, config.dim, batch_first=True)
         self.fc = nn.Linear(config.dim, len(kanas))
 
     def forward(self, src, tgt, src_mask=None, tgt_mask=None):
@@ -53,11 +58,15 @@ class Model(nn.Module):
         k_emb = self.k_emb(tgt)
         k_emb = k_emb[:, :-1]
         enc_out, _ = self.encoder(e_emb)
+        if self.use_layernorm:
+            enc_out = self.encoder_norm(enc_out)
         enc_out = self.encoder_fc(enc_out)
         dec_out, _ = self.pre_decoder(k_emb)
         attn_out, _ = self.attn.forward(
             dec_out, enc_out, enc_out, key_padding_mask=~src_mask
         )
+        if self.use_layernorm:
+            attn_out = self.attn_norm(attn_out)
         x = torch.cat([dec_out, attn_out], dim=-1)
         x, _ = self.post_decoder(x)
         x = self.fc(x)
@@ -70,6 +79,8 @@ class Model(nn.Module):
         src = src.unsqueeze(0)
         src_emb = self.e_emb(src)
         enc_out, _ = self.encoder(src_emb)
+        if self.use_layernorm:
+            enc_out = self.encoder_norm(enc_out)
         enc_out = self.encoder_fc(enc_out)
         res = [sos_idx]
         h1 = None
@@ -80,6 +91,8 @@ class Model(nn.Module):
             dec_emb = self.k_emb(dec)
             dec_out, h1 = self.pre_decoder(dec_emb, h1)
             attn_out, _ = self.attn(dec_out, enc_out, enc_out)
+            if self.use_layernorm:
+                attn_out = self.attn_norm(attn_out)
             x = torch.cat([dec_out, attn_out], dim=-1)
             x, h2 = self.post_decoder(x, h2)
             x = self.fc(x)
@@ -212,7 +225,7 @@ def train():
     model = Model(config).to(device)
     train_dataset = MyDataset(config.train_data, device, max_words=None)
     eval_dataset = MyDataset(config.eval_data, device, max_words=config.eval_max_words)
-    batch_size = 256 if use_cuda else 64
+    batch_size = 256
     print(f"Batch size: {batch_size}")
 
     output_dir = args.output or Path(
