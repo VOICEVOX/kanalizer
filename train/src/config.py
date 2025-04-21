@@ -30,6 +30,7 @@ class Config:
     num_best_models_to_keep: int
     seed: int
     optimizer_lr: float
+    exponential_lr_scheduler_gamma: float
     use_layernorm: bool
 
     @classmethod
