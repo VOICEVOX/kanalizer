@@ -83,7 +83,13 @@ class Model(nn.Module):
             x = torch.cat([dec_out, attn_out], dim=-1)
             x, h2 = self.post_decoder(x, h2)
             x = self.fc(x)
-            idx = torch.argmax(x, dim=-1)
+            # 1ステップ目はeosを出力させない
+            if count == 0:
+                x_ = x.clone()
+                x_[0, 0, eos_idx] = float("-inf")
+                idx = torch.argmax(x_, dim=-1)
+            else:
+                idx = torch.argmax(x, dim=-1)
             res.append(idx.cpu().item())
             count += 1
         return res
