@@ -4,7 +4,7 @@ train_data: ./vendor/data.jsonl
 eval_data: ./vendor/unidic_words.jsonl
 # 評価用データのうち、学習中に評価に使う単語の数。（eval.pyでは全てのデータを使います）
 # nullの場合は全てのデータを使います。
-eval_max_words: 100
+eval_max_words: null
 # モデルの次元数。
 dim: 256
 # 学習するエポック数。
