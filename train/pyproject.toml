@@ -1,6 +1,6 @@
 [project]
 name = "kanalizer"
-version = "0.3.0"
+dynamic = ["version"]
 readme = "README.md"
 authors = [{ name = "VOICEVOX", email = "voicevox.official@gmail.com" }]
 requires-python = ">=3.11"
