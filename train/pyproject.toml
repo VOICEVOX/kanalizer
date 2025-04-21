@@ -1,9 +1,8 @@
 [project]
 name = "kanalizer"
 version = "0.3.0"
-description = "A tool for automatic English to Katakana conversion"
 readme = "README.md"
-authors = [{ name = "Patchethium", email = "asguftuikh@gmail.com" }]
+authors = [{ name = "VOICEVOX", email = "voicevox.official@gmail.com" }]
 requires-python = ">=3.11"
 dependencies = [
   "g2p-en>=2.1.0",
