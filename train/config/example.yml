@@ -17,7 +17,5 @@ num_best_models_to_keep: 2
 seed: 0
 # Optimizerの学習率
 optimizer_lr: 0.001
-# 学習率の減衰率
-exponential_lr_scheduler_gamma: 0.9
 # LayerNormを使うかどうか
 use_layernorm: true

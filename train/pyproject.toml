@@ -17,4 +17,5 @@ dependencies = [
   "torch==2.5.0",
   "torcheval>=0.0.7",
   "pyyaml>=6.0.2",
+  "schedulefree>=1.4.1",
 ]

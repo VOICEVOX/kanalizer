@@ -11,10 +11,10 @@ import shutil
 import subprocess
 
 from g2p_en import G2p
+from schedulefree import RAdamScheduleFree
 import torch
 from torch import Tensor, nn
 from torch.nn.utils.rnn import pad_sequence
-from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
 from tqdm.auto import tqdm
@@ -282,14 +282,14 @@ def train():
     )
 
     criterion = nn.CrossEntropyLoss(ignore_index=0)
-    optimizer = torch.optim.Adam(model.parameters(), lr=config.optimizer_lr)
-    scheduler = ExponentialLR(optimizer, config.exponential_lr_scheduler_gamma)
+    optimizer = RAdamScheduleFree(model.parameters(), lr=config.optimizer_lr)
     writer = SummaryWriter(log_dir=output_dir)
     evaluator = Evaluator(eval_dataset)
     epochs = config.max_epochs
     steps = 0
     for epoch in range(1, epochs + 1):
         model.train()
+        optimizer.train()
         for eng, kata, e_mask, k_mask in tqdm(train_dl, desc=f"Epoch {epoch} train"):
             optimizer.zero_grad()
             out = model(eng, kata, e_mask, k_mask)
@@ -299,6 +299,7 @@ def train():
             optimizer.step()
             steps += 1
         model.eval()
+        optimizer.eval()
 
         total_loss = 0
         total = 0
@@ -321,8 +322,6 @@ def train():
         bleu = evaluator.evaluate(model)
         writer.add_scalar("BLEU", bleu, epoch)
         print(f"Epoch {epoch} BLEU: {bleu}")
-
-        scheduler.step()
 
         save_best_models(epoch, model, output_dir, config, best_scores, bleu)
         save_last_models(epoch, model, output_dir, config)
