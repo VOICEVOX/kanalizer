@@ -10,8 +10,9 @@ def migrate(config: dict):
 
     if "optimizer_lr" not in config:
         config["optimizer_lr"] = 1e-3
-    if "exponential_lr_scheduler_gamma" not in config:
-        config["exponential_lr_scheduler_gamma"] = 0.9
+
+    if "exponential_lr_scheduler_gamma" in config:
+        del config["exponential_lr_scheduler_gamma"]
 
     return config
 
