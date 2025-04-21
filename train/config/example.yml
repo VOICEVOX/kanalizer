@@ -8,7 +8,7 @@ eval_max_words: 100
 # モデルの次元数。
 dim: 256
 # 学習するエポック数。
-max_epochs: 10
+max_epochs: 15
 # 最新のエポックから保存するモデルの数。
 num_last_models_to_keep: 2
 # 保存する上位のモデルの数。
@@ -19,3 +19,5 @@ seed: 0
 optimizer_lr: 0.001
 # 学習率の減衰率
 exponential_lr_scheduler_gamma: 0.9
+# Optimizerのweight_decay（L2正則化）
+weight_decay: 0.2

@@ -13,6 +13,9 @@ def migrate(config: dict):
     if "exponential_lr_scheduler_gamma" not in config:
         config["exponential_lr_scheduler_gamma"] = 0.9
 
+    if "weight_decay" not in config:
+        config["weight_decay"] = 0
+
     return config
 
 
@@ -28,6 +31,7 @@ class Config:
     seed: int
     optimizer_lr: float
     exponential_lr_scheduler_gamma: float
+    weight_decay: float
 
     @classmethod
     def from_dict(cls, config: dict):
