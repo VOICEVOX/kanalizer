@@ -15,7 +15,7 @@ import yaml
 from config import Config
 from constants import EOS_IDX, SOS_IDX, ascii_entries, kanas
 
-from train import Model, MyDataset
+from train import Model
 
 
 def main():
