@@ -212,7 +212,7 @@ def train():
     model = Model(config).to(device)
     train_dataset = MyDataset(config.train_data, device, max_words=None)
     eval_dataset = MyDataset(config.eval_data, device, max_words=config.eval_max_words)
-    batch_size = 256 if use_cuda else 64
+    batch_size = 256
     print(f"Batch size: {batch_size}")
 
     output_dir = args.output or Path(
