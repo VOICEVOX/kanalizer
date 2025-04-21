@@ -41,10 +41,14 @@ class Model(nn.Module):
             nn.Tanh(),
         )
         self.pre_decoder = nn.GRU(config.dim, config.dim, batch_first=True)
+        if self.use_layernorm:
+            self.pre_dec_norm = nn.LayerNorm(config.dim)
         self.attn = nn.MultiheadAttention(config.dim, 4, batch_first=True, dropout=0.1)
         if self.use_layernorm:
             self.attn_norm = nn.LayerNorm(config.dim)
         self.post_decoder = nn.GRU(2 * config.dim, config.dim, batch_first=True)
+        if self.use_layernorm:
+            self.post_dec_norm = nn.LayerNorm(config.dim)
         self.fc = nn.Linear(config.dim, len(kanas))
 
     def forward(self, src, tgt, src_mask=None, tgt_mask=None):
@@ -62,6 +66,8 @@ class Model(nn.Module):
             enc_out = self.encoder_norm(enc_out)
         enc_out = self.encoder_fc(enc_out)
         dec_out, _ = self.pre_decoder(k_emb)
+        if self.use_layernorm:
+            dec_out = self.pre_dec_norm(dec_out)
         attn_out, _ = self.attn.forward(
             dec_out, enc_out, enc_out, key_padding_mask=~src_mask
         )
@@ -69,6 +75,8 @@ class Model(nn.Module):
             attn_out = self.attn_norm(attn_out)
         x = torch.cat([dec_out, attn_out], dim=-1)
         x, _ = self.post_decoder(x)
+        if self.use_layernorm:
+            x = self.post_dec_norm(x)
         x = self.fc(x)
         return x
 
@@ -90,11 +98,15 @@ class Model(nn.Module):
             dec = torch.tensor([res[-1]]).unsqueeze(0).to(src.device)
             dec_emb = self.k_emb(dec)
             dec_out, h1 = self.pre_decoder(dec_emb, h1)
+            if self.use_layernorm:
+                dec_out = self.pre_dec_norm(dec_out)
             attn_out, _ = self.attn(dec_out, enc_out, enc_out)
             if self.use_layernorm:
                 attn_out = self.attn_norm(attn_out)
             x = torch.cat([dec_out, attn_out], dim=-1)
             x, h2 = self.post_decoder(x, h2)
+            if self.use_layernorm:
+                x = self.post_dec_norm(x)
             x = self.fc(x)
             idx = torch.argmax(x, dim=-1)
             res.append(idx.cpu().item())
