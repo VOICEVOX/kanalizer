@@ -10,8 +10,12 @@ def migrate(config: dict):
 
     if "optimizer_lr" not in config:
         config["optimizer_lr"] = 1e-3
-    if "exponential_lr_scheduler_gamma" not in config:
-        config["exponential_lr_scheduler_gamma"] = 0.9
+
+    if "exponential_lr_scheduler_gamma" in config:
+        del config["exponential_lr_scheduler_gamma"]
+
+    if "use_layernorm" not in config:
+        config["use_layernorm"] = False
 
     if "weight_decay" not in config:
         config["weight_decay"] = 0
@@ -30,7 +34,7 @@ class Config:
     num_best_models_to_keep: int
     seed: int
     optimizer_lr: float
-    exponential_lr_scheduler_gamma: float
+    use_layernorm: bool
     weight_decay: float
 
     @classmethod

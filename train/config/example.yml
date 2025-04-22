@@ -4,7 +4,7 @@ train_data: ./vendor/data.jsonl
 eval_data: ./vendor/unidic_words.jsonl
 # 評価用データのうち、学習中に評価に使う単語の数。（eval.pyでは全てのデータを使います）
 # nullの場合は全てのデータを使います。
-eval_max_words: 100
+eval_max_words: null
 # モデルの次元数。
 dim: 256
 # 学習するエポック数。
@@ -17,7 +17,7 @@ num_best_models_to_keep: 2
 seed: 0
 # Optimizerの学習率
 optimizer_lr: 0.001
-# 学習率の減衰率
-exponential_lr_scheduler_gamma: 0.9
+# LayerNormを使うかどうか
+use_layernorm: true
 # Optimizerのweight_decay（L2正則化）
 weight_decay: 0.2
