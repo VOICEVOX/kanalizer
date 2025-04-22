@@ -15,7 +15,7 @@ import yaml
 from config import Config
 from constants import EOS_IDX, SOS_IDX, ascii_entries, kanas
 
-from train import Model
+from train import Model, word_to_tensor
 
 
 def main():
@@ -66,15 +66,6 @@ def load_model(output_dir: str, config: Config, device: torch.device) -> Model:
     model.to(device)
     model.eval()
     return model
-
-
-def word_to_tensor(word: str, device: torch.device) -> torch.Tensor:
-    c_dict = {c: i for i, c in enumerate(ascii_entries)}
-    indices = [c_dict.get(c, None) for c in word.lower()]
-    if None in indices:
-        raise ValueError("Input word contains invalid character")
-    indices = [SOS_IDX] + indices + [EOS_IDX]
-    return torch.tensor(indices, dtype=torch.long, device=device)
 
 
 def infer_katakana(model: Model, src_tensor: torch.Tensor) -> list[str]:

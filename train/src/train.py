@@ -25,6 +25,12 @@ from constants import EOS_IDX, SOS_IDX, ascii_entries, kanas
 from evaluator import Evaluator
 
 
+def word_to_tensor(word: str, device: torch.device) -> torch.Tensor:
+    c_dict = {c: i for i, c in enumerate(ascii_entries)}
+    indices = [SOS_IDX] + [c_dict[c] for c in word] + [EOS_IDX]
+    return torch.tensor(indices, device=device)
+
+
 class Model(nn.Module):
     def __init__(self, config: Config):
         super(Model, self).__init__()
@@ -108,7 +114,6 @@ class MyDataset(Dataset):
         if max_words is not None:
             self.data = random.sample(self.data, min(max_words, len(self.data)))
         self.device = device
-        self.c_dict = {c: i for i, c in enumerate(ascii_entries)}
         self.kata_dict = {c: i for i, c in enumerate(kanas)}
         self.sos_idx = SOS_IDX
         self.eos_idx = EOS_IDX
@@ -118,10 +123,6 @@ class MyDataset(Dataset):
 
     def __len__(self):
         return len(self.data)
-
-    def c2k(self, eng):
-        eng = [self.c_dict[c] for c in eng]
-        return eng
 
     def set_return_full(self, flag: bool):
         """
@@ -135,8 +136,7 @@ class MyDataset(Dataset):
         item = self.data[idx]
         eng = item["word"]
         katas = item["kata"]
-        eng = self.c2k(eng)
-        eng = [self.sos_idx] + eng + [self.eos_idx]
+        en = word_to_tensor(eng, self.device)
         # katas is a list of katakana words
         # if not return_full, we randomly select one of them
         # else we return all of them
@@ -144,7 +144,6 @@ class MyDataset(Dataset):
             kata = katas[random.randint(0, len(katas) - 1)]
             kata = [self.kata_dict[c] for c in kata]
             kata = [self.sos_idx] + kata + [self.eos_idx]
-            en = torch.tensor(eng).to(self.device)
             kana = torch.tensor(kata).to(self.device)
             self.cache_en[idx] = en
             self.cache_kata[idx] = kana
@@ -155,7 +154,6 @@ class MyDataset(Dataset):
                 k = [self.kata_dict[c] for c in k]
                 k = [self.sos_idx] + k + [self.eos_idx]
                 kata.append(torch.tensor(k).to(self.device))
-            en = torch.tensor(eng).to(self.device)
             self.cache_en[idx] = en
             self.cache_kata[idx] = kata
             return en, kata
