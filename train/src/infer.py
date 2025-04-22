@@ -32,8 +32,8 @@ def main():
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("words", nargs="+", help="Input word(s) to infer")
     parser.add_argument("output_dir", help="Output directory with trained model")
+    parser.add_argument("words", nargs="+", help="Input word(s) to infer")
     return parser.parse_args()
 
 
