@@ -13,7 +13,7 @@ from pathlib import Path
 import torch
 import yaml
 from config import Config
-from constants import EOS_IDX, SOS_IDX, ascii_entries, kanas
+from constants import EOS_IDX, SOS_IDX, kanas
 
 from train import Model, word_to_tensor
 
