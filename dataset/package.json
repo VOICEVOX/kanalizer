@@ -9,6 +9,7 @@
     "lint": "biome check",
     "fmt": "biome check --write",
     "tools:generateConfigSchema": "node --experimental-strip-types ./src/tools/generateConfigSchema.ts",
+    "tools:mergeDatasets": "node --experimental-strip-types ./src/tools/mergeDatasets.ts",
     "typecheck": "tsc"
   },
   "packageManager": "pnpm@10.6.2",

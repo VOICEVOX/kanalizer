@@ -9,3 +9,9 @@ LLMを用いて、英単語から読みを推測するためのデータセッ�
    設定値についてはコメントを参照してください。\
    また、[YAML Language Server](https://github.com/redhat-developer/yaml-language-server)を使用すると、設定値の補完が可能です。
 3. `pnpm run start`を実行します。
+
+## データセットの結合
+
+```
+pnpm run tools:mergeDatasets [結合元のデータセット1] [結合元のデータセット2] ... [結合先のデータセット]
+```
