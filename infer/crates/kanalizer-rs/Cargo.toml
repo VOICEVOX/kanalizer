@@ -1,7 +1,7 @@
 [package]
 name = "kanalizer"
 version.workspace = true
-edition.workspace = true
+edition = "2021"
 license.workspace = true
 exclude = ["tasks", "models"]
 description.workspace = true
@@ -20,7 +20,7 @@ compress_model = ["dep:brotli-decompressor"]
 [dependencies]
 anyhow = "1.0.95"
 brotli-decompressor = { version = "4.0.2", optional = true }
-cfg-elif = "0.6.3"
+cfg-elif = "0.6.2"
 clap = { version = "4.5.29", features = ["derive"] }
 duplicate = "2.0.0"
 educe = "0.6.0"
