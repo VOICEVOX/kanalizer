@@ -1,3 +1,4 @@
+#[rustfmt::skip] // TODO: Rust 2024に移行したらこの抑制をやめる
 use criterion::{Criterion, criterion_group, criterion_main};
 
 fn criterion_benchmark(c: &mut Criterion) {

@@ -120,6 +120,7 @@ mod tests {
             .iter()
             .map(|&c| c.to_string())
             .collect();
+        #[rustfmt::skip] // TODO: Rust 2024に移行したらこの抑制をやめる
         assert!(
             INPUT_CHARS
                 .iter()
@@ -133,6 +134,7 @@ mod tests {
     fn test_output_chars() {
         // OUTPUT_CHARSがKANASのサブセットであることを確認する。
         let kana_entries: HashSet<_> = constants::KANAS.iter().map(|&c| c.to_string()).collect();
+        #[rustfmt::skip] // TODO: Rust 2024に移行したらこの抑制をやめる
         assert!(
             OUTPUT_CHARS
                 .iter()
