@@ -158,7 +158,7 @@ class MyDataset(Dataset):
         """
         super().__init__()
         self.g2p = G2p()
-        with open(path, "r") as file:
+        with open(path, "r", encoding="utf-8") as file:
             lines = file.readlines()
         self.data = [json.loads(line) for line in lines]
         if max_words is not None:
@@ -247,7 +247,7 @@ def train():
     parser.add_argument("output", type=Path, nargs="?")
     args = parser.parse_args()
 
-    config = Config.from_dict(yaml.safe_load(args.config.read_text()))
+    config = Config.from_dict(yaml.safe_load(args.config.read_text(encoding="utf-8")))
     print(f"Using config: {config}")
 
     torch.manual_seed(config.seed)

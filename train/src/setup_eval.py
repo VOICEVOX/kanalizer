@@ -48,13 +48,13 @@ def download_unidic(path: str):
 def filter_unidic():
     filter = re.compile(r"^[Ａ-Ｚ][ａ-ｚ]{2,}$")
     filtered = {}
-    with open("./vendor/unidic-lex.csv", "r") as f:
+    with open("./vendor/unidic-lex.csv", "r", encoding="utf-8") as f:
         reader = csv.reader(f)
         for row in tqdm(reader, desc="Filtering"):
             if filter.match(row[0]) and simple_alphabet_to_katakana(row[0]) != row[24]:
                 filtered[zenkaku_to_hankaku(row[0]).lower()] = row[24]
 
-    with open("./vendor/unidic_words.jsonl", "w") as f:
+    with open("./vendor/unidic_words.jsonl", "w", encoding="utf-8") as f:
         for k, v in tqdm(filtered.items(), desc="Writing"):
             f.write(json.dumps({"word": k, "kata": [v]}, ensure_ascii=False) + "\n")
 
