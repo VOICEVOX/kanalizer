@@ -15,3 +15,9 @@ LLMを用いて、英単語から読みを推測するためのデータセッ�
 ```
 pnpm run tools:mergeDatasets dataset1.jsonl dataset2.jsonl ... output.jsonl
 ```
+
+## データセットの検証（警告のみ）
+
+```
+pnpm run tools:validateDataset ../train/vendor/data.jsonl
+```

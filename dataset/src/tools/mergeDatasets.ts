@@ -5,6 +5,7 @@
 //
 import fs from "node:fs/promises";
 import { z } from "zod";
+import { filterPronunciations, getSuspiciousWordReasons } from "../utils.ts";
 
 const datasetLineSchema = z.object({
   word: z.string(),
@@ -36,10 +37,27 @@ async function mergeDatasets(datasets: string[]) {
     const content = await fs.readFile(datasetPath, "utf-8");
     const parsedContent = content
       .split("\n")
+      .filter((line) => line.trim().length > 0)
       .map((line) => datasetLineSchema.parse(JSON.parse(line)));
 
     for (const { word, kata } of parsedContent) {
-      dataset.set(word, kata[0]);
+      const suspiciousReasons = getSuspiciousWordReasons(word);
+      if (suspiciousReasons.length > 0) {
+        console.warn(
+          `Suspicious word dropped while merging: ${word} (${suspiciousReasons.join(
+            ",",
+          )})`,
+        );
+        continue;
+      }
+
+      const valid = filterPronunciations({ [word]: kata[0] });
+      if (!(word in valid)) {
+        console.warn(`Invalid pronunciation dropped while merging: ${word}`);
+        continue;
+      }
+
+      dataset.set(word, valid[word]);
     }
   }
 

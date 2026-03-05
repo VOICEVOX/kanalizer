@@ -46,5 +46,10 @@ jobs:
           cp ./config.test.yml ./config.yml
           pnpm run start
 
+      - name: Validate generated dataset (warning only)
+        run: |
+          pnpm run tools:validateDataset ../train/vendor/data.jsonl
+        continue-on-error: true
+
       - name: Check if schema is up-to-date
         run: pnpm run tools:generateConfigSchema --check

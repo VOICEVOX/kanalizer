@@ -14,6 +14,7 @@ import {
   Throttle,
   bisectMax,
   filterPronunciations,
+  getSuspiciousWordReasons,
   sleep,
 } from "./utils.ts";
 
@@ -59,10 +60,23 @@ async function main() {
 
   console.log("4: Writing results...");
   const path = `${import.meta.dirname}/../../train/vendor/data.jsonl`;
-  await writeResults({ path, results: allResults });
+  const allowedWords = new Set(words);
+
+  // 実際に書き込まれる結果の数を計算します。許可された単語と疑わしい単語のフィルタリングを考慮します。
+  const numWritten = [...allResults].filter(([word]) => {
+    if (!allowedWords.has(word)) return false;
+    const reasons = getSuspiciousWordReasons(word);
+    return reasons.length === 0;
+  }).length;
+
+  await writeResults({
+    path,
+    results: allResults,
+    allowedWords,
+  });
 
   console.log(
-    `${allResults.size} pronunciations inferred and written to ${path}`,
+    `${numWritten} pronunciations written to ${path} (out of ${allResults.size} inferred)`,
   );
 }
 
@@ -177,6 +191,30 @@ async function loadWords(params: {
     wordsArray = params.random.shuffle(wordsArray).slice(0, params.maxNumWords);
   }
 
+  const wordsWithReasons = wordsArray.map((word) => ({
+    word,
+    reasons: getSuspiciousWordReasons(word),
+  }));
+  const suspiciousWords = wordsWithReasons.filter(
+    ({ reasons }) => reasons.length > 0,
+  );
+  if (suspiciousWords.length > 0) {
+    for (const { word, reasons } of suspiciousWords.slice(0, 10)) {
+      console.warn(
+        `Suspicious source word dropped: ${word} (${reasons.join(",")})`,
+      );
+    }
+    if (suspiciousWords.length > 10) {
+      console.warn(
+        `... and ${suspiciousWords.length - 10} more suspicious source words`,
+      );
+    }
+  }
+
+  wordsArray = wordsWithReasons
+    .filter(({ reasons }) => reasons.length === 0)
+    .map(({ word }) => word);
+
   return wordsArray;
 }
 
@@ -290,8 +328,31 @@ async function inferWorker(params: {
     }
 
     const validResults = filterPronunciations(results);
+    const expectedWords = new Set(entries.map((entry) => entry.word));
+    const allowedAndNotSuspiciousResults: Record<string, string> = {};
+    const suspiciousEntries = new Set<string>();
+    for (const [word, pronunciation] of Object.entries(validResults)) {
+      if (!expectedWords.has(word)) {
+        console.warn(`Unexpected inferred word dropped: ${word}`);
+        continue;
+      }
+      const suspiciousReasons = getSuspiciousWordReasons(word);
+      if (suspiciousReasons.length > 0) {
+        console.warn(
+          `Suspicious inferred word dropped: ${word} (${suspiciousReasons.join(
+            ",",
+          )})`,
+        );
+        suspiciousEntries.add(word);
+        continue;
+      }
+      allowedAndNotSuspiciousResults[word] = pronunciation;
+    }
+
     const invalidWords = entries.filter(
-      (entry) => !(entry.word in validResults),
+      (entry) =>
+        !(entry.word in allowedAndNotSuspiciousResults) &&
+        !suspiciousEntries.has(entry.word),
     );
 
     params.queue.push(
@@ -303,13 +364,15 @@ async function inferWorker(params: {
 
     console.log(
       `Inferred ${Object.keys(results).length} pronunciations, ${
-        Object.keys(validResults).length
+        Object.keys(allowedAndNotSuspiciousResults).length
       } valid, ${invalidWords.length} invalid or forgotten, ${
         params.queue.length
       } remaining`,
     );
 
-    for (const [word, pronunciation] of Object.entries(validResults)) {
+    for (const [word, pronunciation] of Object.entries(
+      allowedAndNotSuspiciousResults,
+    )) {
       params.allResults.set(word, pronunciation);
     }
   }
@@ -336,10 +399,39 @@ function incrementTryCountAndFilter(params: {
 async function writeResults(params: {
   path: string;
   results: Map<string, string>;
+  allowedWords: Set<string>;
 }) {
+  const sanitizedResults: [string, string][] = [];
+  let droppedResultsCount = 0;
+
+  for (const [word, pronunciation] of params.results) {
+    if (!params.allowedWords.has(word)) {
+      droppedResultsCount++;
+      console.warn(`Unexpected output word dropped: ${word}`);
+      continue;
+    }
+
+    const suspiciousReasons = getSuspiciousWordReasons(word);
+    if (suspiciousReasons.length > 0) {
+      droppedResultsCount++;
+      console.warn(
+        `Suspicious output word dropped: ${word} (${suspiciousReasons.join(",")})`,
+      );
+      continue;
+    }
+
+    sanitizedResults.push([word, pronunciation]);
+  }
+
+  if (droppedResultsCount > 0) {
+    console.warn(
+      `Dropped ${droppedResultsCount} invalid outputs before writing`,
+    );
+  }
+
   await fs.writeFile(
     params.path,
-    [...params.results]
+    sanitizedResults
       .map(([word, pronunciation]) =>
         JSON.stringify({
           word,
