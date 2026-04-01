@@ -3,6 +3,8 @@ name: Check pinact
 on:
   push:
   pull_request:
+    paths:
+      - ".github/**"
   workflow_dispatch:
 
 defaults:
