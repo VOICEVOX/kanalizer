@@ -8,7 +8,3 @@ files:
 ignore_actions:
   - name: voicevox/merge-gatekeeper
     ref: main
-  - name: cargo-bins/cargo-binstall
-    ref: main
-  - name: pypa/gh-action-pypi-publish
-    ref: release/v1
