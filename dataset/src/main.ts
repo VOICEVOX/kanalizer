@@ -14,6 +14,7 @@ import {
   Throttle,
   bisectMax,
   filterPronunciations,
+  getSuspiciousWordReasons,
   sleep,
 } from "./utils.ts";
 
@@ -59,10 +60,16 @@ async function main() {
 
   console.log("4: Writing results...");
   const path = `${import.meta.dirname}/../../train/vendor/data.jsonl`;
-  await writeResults({ path, results: allResults });
+  const allowedWords = new Set(words);
+
+  const numWritten = await writeResults({
+    path,
+    results: allResults,
+    allowedWords,
+  });
 
   console.log(
-    `${allResults.size} pronunciations inferred and written to ${path}`,
+    `${numWritten} pronunciations written to ${path} (out of ${allResults.size} inferred)`,
   );
 }
 
@@ -177,6 +184,30 @@ async function loadWords(params: {
     wordsArray = params.random.shuffle(wordsArray).slice(0, params.maxNumWords);
   }
 
+  const wordsWithReasons = wordsArray.map((word) => ({
+    word,
+    reasons: getSuspiciousWordReasons(word),
+  }));
+  const suspiciousWords = wordsWithReasons.filter(
+    ({ reasons }) => reasons.length > 0,
+  );
+  if (suspiciousWords.length > 0) {
+    for (const { word, reasons } of suspiciousWords.slice(0, 10)) {
+      console.warn(
+        `Suspicious source word dropped: ${word} (${reasons.join(",")})`,
+      );
+    }
+    if (suspiciousWords.length > 10) {
+      console.warn(
+        `... and ${suspiciousWords.length - 10} more suspicious source words`,
+      );
+    }
+  }
+
+  wordsArray = wordsWithReasons
+    .filter(({ reasons }) => reasons.length === 0)
+    .map(({ word }) => word);
+
   return wordsArray;
 }
 
@@ -290,8 +321,18 @@ async function inferWorker(params: {
     }
 
     const validResults = filterPronunciations(results);
+    const expectedWords = new Set(entries.map((entry) => entry.word));
+    const expectedResults: Record<string, string> = {};
+    for (const [word, pronunciation] of Object.entries(validResults)) {
+      if (!expectedWords.has(word)) {
+        console.warn(`Unexpected inferred word dropped: ${word}`);
+        continue;
+      }
+      expectedResults[word] = pronunciation;
+    }
+
     const invalidWords = entries.filter(
-      (entry) => !(entry.word in validResults),
+      (entry) => !Object.hasOwn(expectedResults, entry.word),
     );
 
     params.queue.push(
@@ -303,13 +344,13 @@ async function inferWorker(params: {
 
     console.log(
       `Inferred ${Object.keys(results).length} pronunciations, ${
-        Object.keys(validResults).length
+        Object.keys(expectedResults).length
       } valid, ${invalidWords.length} invalid or forgotten, ${
         params.queue.length
       } remaining`,
     );
 
-    for (const [word, pronunciation] of Object.entries(validResults)) {
+    for (const [word, pronunciation] of Object.entries(expectedResults)) {
       params.allResults.set(word, pronunciation);
     }
   }
@@ -336,10 +377,30 @@ function incrementTryCountAndFilter(params: {
 async function writeResults(params: {
   path: string;
   results: Map<string, string>;
-}) {
+  allowedWords: Set<string>;
+}): Promise<number> {
+  const sanitizedResults: [string, string][] = [];
+  let droppedResultsCount = 0;
+
+  for (const [word, pronunciation] of params.results) {
+    if (!params.allowedWords.has(word)) {
+      droppedResultsCount++;
+      console.warn(`Unexpected output word dropped: ${word}`);
+      continue;
+    }
+
+    sanitizedResults.push([word, pronunciation]);
+  }
+
+  if (droppedResultsCount > 0) {
+    console.warn(
+      `Dropped ${droppedResultsCount} invalid outputs before writing`,
+    );
+  }
+
   await fs.writeFile(
     params.path,
-    [...params.results]
+    sanitizedResults
       .map(([word, pronunciation]) =>
         JSON.stringify({
           word,
@@ -348,4 +409,6 @@ async function writeResults(params: {
       )
       .join("\n"),
   );
+
+  return sanitizedResults.length;
 }
