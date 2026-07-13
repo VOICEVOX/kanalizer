@@ -11,6 +11,9 @@ defaults:
     shell: bash
     working-directory: infer
 
+env:
+  KANALIZER_HF_TOKEN: ${{ secrets.HUGGINGFACE_DOWNLOAD_TOKEN }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
