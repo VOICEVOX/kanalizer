@@ -62,7 +62,7 @@ fn prepare_huggingface_model() -> anyhow::Result<PathBuf> {
         == Some(MODEL_TAG);
 
     if !latest_model_exists {
-        download_to(
+        download_huggingface_to(
             &format!(
                 "https://huggingface.co/VOICEVOX/kanalizer-model/resolve/{MODEL_TAG}/model/c2k.safetensors"
             ),
@@ -75,11 +75,11 @@ fn prepare_huggingface_model() -> anyhow::Result<PathBuf> {
     Ok(model_path)
 }
 
-fn download_to(url: &str, path: &Path) -> anyhow::Result<()> {
+fn download_huggingface_to(url: &str, path: &Path) -> anyhow::Result<()> {
     static NUM_ATTEMPTS: usize = 6;
 
     for i in 0..NUM_ATTEMPTS {
-        let success = download(url, path)?;
+        let success = download_impl(url, path)?;
         if success {
             return Ok(());
         }
@@ -90,12 +90,16 @@ fn download_to(url: &str, path: &Path) -> anyhow::Result<()> {
         "Failed to download model after {NUM_ATTEMPTS} attempts"
     ));
 
-    fn download(url: &str, path: &Path) -> anyhow::Result<bool> {
-        let response = ureq::get(url)
-            .config()
-            .http_status_as_error(false)
-            .build()
-            .call()?;
+    fn download_impl(url: &str, path: &Path) -> anyhow::Result<bool> {
+        let response = if let Some(token) = std::env::var("KANALIZER_HF_TOKEN").ok() {
+            ureq::get(url).header("Authorization", &format!("Bearer {token}"))
+        } else {
+            ureq::get(url)
+        }
+        .config()
+        .http_status_as_error(false)
+        .build()
+        .call()?;
         match response.status().as_u16() {
             200 => {
                 let mut file = tempfile::NamedTempFile::new_in(path.parent().unwrap())?;
@@ -110,6 +114,11 @@ fn download_to(url: &str, path: &Path) -> anyhow::Result<()> {
             status => {
                 let body = response.into_body().read_to_string()?;
                 eprintln!("Failed to download model: {status} {body:?}");
+                if status == 429 {
+                    eprintln!(
+                        "Hint: Download failed because of rate limiting. You can set KANALIZER_HF_TOKEN environment variable to your Hugging Face token to avoid rate limiting."
+                    );
+                }
                 Ok(false)
             }
         }
