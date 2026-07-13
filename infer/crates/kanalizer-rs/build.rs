@@ -91,8 +91,9 @@ fn download_huggingface_to(url: &str, path: &Path) -> anyhow::Result<()> {
     ));
 
     fn download_impl(url: &str, path: &Path) -> anyhow::Result<bool> {
-        let response = if let Ok(token) = std::env::var("KANALIZER_HF_TOKEN")
-            && !token.is_empty()
+        let response = if let Some(token) = std::env::var("KANALIZER_HF_TOKEN")
+            .ok()
+            .filter(|s| !s.is_empty())
         {
             ureq::get(url).header("Authorization", &format!("Bearer {token}"))
         } else {
