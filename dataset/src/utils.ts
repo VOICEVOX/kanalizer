@@ -63,6 +63,44 @@ export const filterPronunciations = (
   return filtered;
 };
 
+export type SuspiciousWordReason =
+  | "tooLong"
+  | "containsNonAlphabet"
+  | "hasImmediateRepeatedChunk"
+  | "hasLongRepeatedChar";
+
+export const getSuspiciousWordReasons = (
+  word: string,
+  options: { maxWordLength?: number } = {},
+): SuspiciousWordReason[] => {
+  const reasons: SuspiciousWordReason[] = [];
+  const maxWordLength = options.maxWordLength ?? 40;
+
+  if (word.length > maxWordLength) {
+    reasons.push("tooLong");
+    return reasons;
+  }
+
+  if (!/^[a-z]+$/i.test(word)) {
+    reasons.push("containsNonAlphabet");
+  }
+
+  if (/(.{3,})\1{2,}/i.test(word)) {
+    reasons.push("hasImmediateRepeatedChunk");
+  }
+
+  if (/(.)\1{4,}/i.test(word)) {
+    reasons.push("hasLongRepeatedChar");
+  }
+
+  return reasons;
+};
+
+export const isSuspiciousWord = (
+  word: string,
+  options: { maxWordLength?: number } = {},
+) => getSuspiciousWordReasons(word, options).length > 0;
+
 export const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
