@@ -55,7 +55,7 @@ jobs:
             additional_targets: i686-pc-windows-msvc
           - os: macos-15-intel
             build_args: --wheel
-          - os: macos-14
+          - os: macos-15
             build_args: --wheel
     runs-on: ${{ matrix.os }}
     steps:
